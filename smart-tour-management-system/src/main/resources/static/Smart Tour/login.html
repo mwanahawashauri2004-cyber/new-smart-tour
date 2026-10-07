@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Zanzibar Tour</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="mwanzo">
+    <div class="login">
+        <h1> Welcome back </h1>
+        please sign in to continue
+    <form action="Smart tour">
+        <p>✉️ Email</p>
+            <input type="email" placeholder="Enter Email addreas">
+        <p>🔒Password</p>
+            <input type="password" placeholder="Password">
+
+            <div class="checkbox">
+            <label>
+                <br>
+                <input type="checkbox" name="Remember"> Remember me
+            </label>
+        </div>
+
+            <a href="forgot password">Forgot Password</a>
+            <br>
+
+            <div class="botton">
+            <button><b>Sign in</b></button>
+            </div>
+
+            <br>
+            <h3>continue with Google</h3>
+            <br>
+            <button>Google</button>
+
+            <div class="account">
+            <h4>Dont have account ? <a href=" Sign up">Sign up</a></h4>
+            </div>
+
+            </form>
+        </div>
+        </section>
+</body>
+<script>
+        document.addEventListener("DOMContentLoaded", function () {
+        const loginForm = document.getElementById("loginForm");
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+        const signInBtn = document.querySelector(".btn-signin");
+        const googleBtn = document.getElementById("googleBtn");
+        const messageBox = document.getElementById("authMessage");
+
+        // Array ya ku-simulate users waliosajiliwa (Mfano wa frontend test)
+        // Backend (Spring Boot) ikiwa tayari, hii itatoka kwenye Database
+        const registeredEmails = ["test@gmail.com", "user@smarttour.com"];
+
+        if (loginForm) {
+        loginForm.addEventListener("submit", function (event) {
+        event.preventDefault(); // Zuia page ku-refresh
+
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+
+        // 1. Validation: Angalia kama sehemu ziko wazi
+        if (email === "" || password === "") {
+        showMessage("please enter your Email na Password!", "red");
+        return;
+    }
+
+        // 2. Validation: Angalia muundo wa Email
+        if (!email.includes("@") || !email.includes(".")) {
+        showMessage("please enter the correct email and password!", "red");
+        return;
+    }
+
+        // 3. Set Loading status kwenye button
+        const originalBtnText = signInBtn.innerText;
+        signInBtn.innerText = "Checking...";
+        signInBtn.disabled = true;
+        showMessage("it correct your account...", "blue");
+
+        // 4. Kagua masharti ya User (Spring Boot Fetch API)
+        fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email, password: password })
+    })
+        .then(response => response.json())
+        .then(data => {
+        resetButton(originalBtnText);
+
+        if (data.status === "NEW_USER" || data.exists === false) {
+        // MASHARTI: Kama ni user mpya, mzuie ku-login
+        showMessage("our account is not obtain! click  'Sign up' or use Google to sign in.", "red");
+    } else if (data.status === "SUCCESS") {
+        showMessage("Umefanikiwa! Inahamisha kwenda Dashboard...", "green");
+        setTimeout(() => { window.location.href = "/dashboard"; }, 1200);
+    } else {
+        showMessage("incorrect password please try again.", "red");
+    }
+    })
+        .catch(error => {
+        // KAMA BACKEND HAIJAUNGANISHWA BADO (Frontend Demo Check):
+        resetButton(originalBtnText);
+
+        if (!registeredEmails.includes(email.toLowerCase())) {
+        // MASHARTI: User mpya anazuiliwa ku-login
+        showMessage("Email hii haijasajiliwa! Tafadhali bonyeza 'Sign up' kwanza.", "red");
+    } else {
+        showMessage("Umefanikiwa kuingia! Inahamisha...", "green");
+        setTimeout(() => { window.location.href = "/dashboard"; }, 1200);
+    }
+    });
+    });
+    }
+
+        // 5. Google Sign-In Action
+        if (googleBtn) {
+        googleBtn.addEventListener("click", function () {
+        showMessage("Inakuelekeza Google kuingia...", "blue");
+        // Spring Boot OAuth2 Login URL
+        window.location.href = "/oauth2/authorization/google";
+    });
+    }
+
+        // Helper Function: Onyesha Ujumbe wenye Rangi
+        function showMessage(text, color) {
+        messageBox.style.color = color;
+        messageBox.innerText = text;
+    }
+
+        // Helper Function: Kurudisha Kitufe kwenye Hali ya Kawaida
+        function resetButton(text) {
+        signInBtn.innerText = text;
+        signInBtn.disabled = false;
+    }
+    });
+</script>
+</html>
